@@ -1,0 +1,35 @@
+ /// <summary>
+        /// 控件转换为图片
+        /// </summary>
+        /// <param name="control"></param>
+        /// <param name="size"></param>
+        /// <returns></returns>
+        Stream GetImageFromControl(InkCanvas control, Size size)
+        {
+            MemoryStream ms = null;
+
+            DrawingVisual drawingVisual = new DrawingVisual();
+            using (DrawingContext context = drawingVisual.RenderOpen())
+            {
+                VisualBrush brush = new VisualBrush(control) { Stretch = Stretch.None };
+                context.DrawRectangle(brush, null, new Rect(0, 0, control.Width, control.Height));
+                context.Close();
+            }
+
+            //dpi可以自己设定   // 获取dpi方法：PresentationSource.FromVisual(this).CompositionTarget.TransformToDevice
+            RenderTargetBitmap bitmap = new RenderTargetBitmap(Convert.ToInt32(size.Width), Convert.ToInt32(size.Height), 96, 96, PixelFormats.Pbgra32);
+            bitmap.Render(drawingVisual);
+
+            PngBitmapEncoder encode = new PngBitmapEncoder();
+            encode.Frames.Add(BitmapFrame.Create(bitmap));
+            ms = new MemoryStream();
+            encode.Save(ms);
+
+            FileStream fs = new FileStream("R:10.png", FileMode.OpenOrCreate);
+            BinaryWriter w = new BinaryWriter(fs);
+            w.Write(ms.ToArray());
+            fs.Close();
+            ms.Close();
+
+            return ms;
+        }
